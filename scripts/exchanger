@@ -1,0 +1,91 @@
+#!/bin/bash
+
+PIDFILE=/var/run/exchanger.pid
+CONFFILE=/etc/exchanger/exch.conf
+NAME="exchanger --daemon"
+USER=user
+GROUP=group
+
+start()
+{
+    PID=`pgrep -f "$NAME"`
+    if [ -z "$PID" ]; then
+        if [ -f $PIDFILE ]; then rm -f $PIDFILE; fi
+    else
+        echo "exchanger.pid already started."
+        return -1
+    fi
+
+    echo -n "Starting exchanger.pid: "
+    exchanger --daemon $PIDFILE --config $CONFFILE
+    echo "done."
+}
+
+start-stop-daemon()
+{
+    echo -n "Starting exchanger: "
+    start-stop-daemon --start --quiet --pidfile $PIDFILE \
+        --exec exchanger -- "--daemon $PIDFILE --config $CONFFILE" || true
+    echo "done."
+}
+
+stop()
+{
+    PID=`pgrep -f "$NAME"`
+    if [ -z "$PID" ]; then
+        echo "exchanger already stopped."
+        return 0
+    fi
+
+    echo -n "Stopping exchanger: "
+    pkill -TERM -f "$NAME"
+    count=0
+
+    while [ ! -z "$PID" ]; do
+        count=`expr $count + 1`
+        if [ `expr $count % 10` == 0 ]; then pkill -KILL -f "$NAME"; fi
+        if [ $count == 60 ]; then
+            echo " failed."
+            return -1
+        fi
+
+        sleep 1
+
+        PID=`pgrep -f "$NAME"`
+    done
+
+    rm -f $PIDFILE
+    echo "done."
+}
+
+restart()
+{
+    stop && start
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        restart
+        ;;
+    reload)
+        pkill -HUP -f "$NAME"
+        ;;
+    condrestart)
+        if [ ! -f $PIDFILE ]; then
+            restart
+        elif [ ! -f /proc/`cat $PIDFILE`/status ]; then
+            restart
+        fi
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|reload}"
+        exit 1
+        ;;
+esac
+exit $?
