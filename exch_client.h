@@ -42,10 +42,16 @@ namespace exch {
         struct bufferevent *bev;
 
         /**
-         * クライアントアドレスう
+         * クライアントアドレス
          * @var string
          */
         std::string address;
+
+        /**
+         * SID
+         * @var int
+         */
+        int sid;
 
     public:
         /**

@@ -129,6 +129,15 @@ namespace exch {
 
         if (events & (BEV_EVENT_EOF | BEV_EVENT_ERROR)) {
             int current = (int) bufferevent_getfd(bev);
+            std::stringstream numtostr;
+            /* FastCGIへ送信 */
+            numtostr << CMD_DISCONNECT;
+            serv->fcgicli->params["Exchanger-Command"] = numtostr.str();
+            numtostr.str("");
+            numtostr << current;
+            serv->fcgicli->params["Exchanger-SID"] = numtostr.str();
+            serv->fcgicli->request(numtostr.str());
+
             serv->clients[current]->free();
             serv->clients.erase(current);
         }

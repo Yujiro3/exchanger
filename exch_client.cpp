@@ -46,6 +46,7 @@ namespace exch {
      * @return void
      */
     client::client(struct event_base *base, evutil_socket_t fd, struct sockaddr *sa) {
+        sid = (int)fd;
         bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS);
         if (!bev) {
             log::error("Error constructing bufferevent!");

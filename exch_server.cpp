@@ -13,6 +13,7 @@
  */
 
 #include <iostream>
+#include <sstream>
 
 #include <cstring>
 #include <cstdio>
@@ -48,14 +49,25 @@ namespace exch {
      * @access public
      */
     server::~server() {
-        delete rcli;
-        delete fcgicli;
+        std::stringstream numtostr;
 
         clients_t::iterator row = clients.begin();
         while (row != clients.end()) {
+            /* FastCGIへ送信 */
+            numtostr.str("");
+            numtostr << exch::CMD_DISCONNECT;
+            fcgicli->params["Exchanger-Command"] = numtostr.str();
+            numtostr.str("");
+            numtostr << ((*row).second)->sid;
+            fcgicli->params["Exchanger-SID"] = numtostr.str();
+            fcgicli->request(numtostr.str());
+
             ((*row).second)->free();
             ++row;
         }
+
+        delete rcli;
+        delete fcgicli;
 
         /* 各種オブジェクトの開放 */
         evconnlistener_free(listener);
