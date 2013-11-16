@@ -1,6 +1,6 @@
 PROGRAM = exchanger
 CC = g++
-CFLAGS = -L/usr/local/lib -I/usr/local/include -Wall -g
+CFLAGS = -L/usr/local/lib -I/usr/local/include -Wall
 LINKS = -lcrypto -lssl -levent -levent_openssl
 SRCS = main.cpp ini_parse.cpp log_logger.cpp fcgi_client.cpp mem_rediscli.cpp exch_server.cpp exch_client.cpp exch_exchanger.cpp
 

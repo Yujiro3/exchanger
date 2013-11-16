@@ -13,7 +13,6 @@
  */
 
 #include <iostream>
-#include <fstream>
 #include <sstream>
 #include <string>
 
@@ -27,7 +26,6 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#include "log_logger.h"
 #include "fcgi_client.h"
 
 namespace fcgi {
@@ -48,9 +46,9 @@ namespace fcgi {
         sin->sin_addr.s_addr = inet_addr(listen.c_str());
         sin->sin_port = htons(port);
 
-        sock_family = AF_INET;
-        address     = (struct sockaddr *)sin;
-        addrlen     = sizeof(*sin);
+        sock = socket(AF_INET, SOCK_STREAM, 0);
+        address = (struct sockaddr *)sin;
+        addrlen  = sizeof(*sin);
     }
 
     /**
@@ -68,10 +66,9 @@ namespace fcgi {
         bzero(sun, sizeof(struct sockaddr_un));
         sun->sun_family = AF_LOCAL;
         strcpy(sun->sun_path, listen.c_str());
-
-        sock_family = PF_UNIX;
-        address     = (struct sockaddr *)sun;
-        addrlen     = sizeof(*sun);
+        sock = socket(PF_UNIX, SOCK_STREAM, 0);
+        address = (struct sockaddr *)sun;
+        addrlen  = sizeof(*sun);
     }
 
     /**
@@ -84,6 +81,29 @@ namespace fcgi {
     }
 
     /**
+     * Execute a send to the FastCGI application
+     *
+     * @access public
+     * @param String stdin Content
+     * @return String
+     */
+    bool client::send(std::string stdin) {
+        _buildRecord(&stdin);
+
+        if (!_connect()) {
+            return false;
+        }
+        
+        write(sock, record.data(), record.size());
+
+        if (sock > 0) {
+            close(sock);
+        }
+
+        return true;
+    }
+
+    /**
      * Execute a request to the FastCGI application
      *
      * @access public
@@ -91,41 +111,13 @@ namespace fcgi {
      * @return String
      */
     std::string client::request(std::string stdin) {
-        std::stringstream conlength;
-        conlength << stdin.length();
-        
-        params["CONTENT_LENGTH"] = conlength.str();
-        record.clear();
-
-        std::string head("");
-        head += char(0);
-        head += char(1);    // Responder
-        head += char(0);    // Keep alive
-        head += char(0); head += char(0); head += char(0); head += char(0); head += char(0);
-        _buildPacket(BEGIN_REQUEST, head, 1);
-        
-        std::string paramsRequest("");
-        array_t::iterator rows;
-        for (rows = params.begin(); rows != params.end(); rows++) {
-            paramsRequest += _buildNvpair((*rows).first, (*rows).second);
-        }
-
-        if (paramsRequest.size() > 0) {
-            _buildPacket(PARAMS, paramsRequest, 1);
-        }
-        _buildPacket(PARAMS, "", 1);
-
-        if (stdin.size() > 0) {
-            _buildPacket(STDIN, stdin, 1);
-        }
-        _buildPacket(STDIN, "", 1);
+        _buildRecord(&stdin);
 
         if (!_connect()) {
-            return std::string("");
+            return std::string("Unable to connect to FastCGI application.");
         }
-        write(sock, record.c_str(), record.size());
+        write(sock, record.data(), record.size());
 
-        response.erase();
         do {
             _readPacket();
         } while (header.type != END_REQUEST);
@@ -138,16 +130,52 @@ namespace fcgi {
         if (header.flag == REQUEST_COMPLETE) {
             return response;
         } else if (header.flag == CANT_MPX_CONN) {
-            log::debug("This app can't multiplex [CANT_MPX_CONN]");
-            return std::string("");
+            return std::string("This app can't multiplex [CANT_MPX_CONN]");
         } else if (header.flag == OVERLOADED) {
-            log::debug("New request rejected; too busy [OVERLOADED]");
-            return std::string("");
+            return std::string("New request rejected; too busy [OVERLOADED]");
         } else if (header.flag == UNKNOWN_ROLE) {
-            log::debug("Role value not known [UNKNOWN_ROLE]");
-            return std::string("");
+            return std::string("Role value not known [UNKNOWN_ROLE]");
         }
         return response;
+    }
+
+    /**
+     * レコードの作成
+     *
+     * @access public
+     * @param String stdin Content
+     * @return void
+     */
+    void client::_buildRecord(std::string *stdin) {
+        std::stringstream conlength;
+        conlength << stdin->length();
+        
+        params["CONTENT_LENGTH"] = conlength.str();
+        record.clear();
+
+        std::string head("");
+        head += char(0);
+        head += char(1);    // Responder
+        head += char(0);    // Keep alive
+        head += char(0); head += char(0); head += char(0); head += char(0); head += char(0);
+        _buildPacket(BEGIN_REQUEST, &head, 1);
+        
+        std::string paramsRequest("");
+        array_t::iterator rows;
+        for (rows = params.begin(); rows != params.end(); rows++) {
+            paramsRequest += _buildNvpair((*rows).first, (*rows).second);
+        }
+
+        std::string empty("");
+        if (paramsRequest.size() > 0) {
+            _buildPacket(PARAMS, &paramsRequest, 1);
+        }
+        _buildPacket(PARAMS, &empty, 1);
+
+        if (stdin->size() > 0) {
+            _buildPacket(STDIN, stdin, 1);
+        }
+        _buildPacket(STDIN, &empty, 1);
     }
 
     /**
@@ -158,24 +186,24 @@ namespace fcgi {
      * @param  string content
      * @param  int requestId
      */
-    void client::_buildPacket(int type, std::string content, int requestId) {
-        int contentLength = content.size();
+    void client::_buildPacket(int type, std::string *content, int requestId) {
+        int contentLength = content->size();
 
         assert(contentLength >= 0 && contentLength <= MAX_LENGTH);
         
-        record += char(VERSION);                        // version
-        record += char(type);                           // type
-        record += char((requestId     >> 8) & 0xff);    // requestIdB1
-        record += char((requestId         ) & 0xff);    // requestIdB0
-        record += char((contentLength >> 8) & 0xff);    // contentLengthB1
-        record += char((contentLength     ) & 0xff);    // contentLengthB0
-        record += char(0);                              // paddingLength
-        record += char(0);                              // reserved
-        record += content;                              // content
+        record += char(VERSION);                            // version
+        record += char(type);                               // type
+        record += char((requestId     >> 8) & 0xff);        // requestIdB1
+        record += char((requestId         ) & 0xff);        // requestIdB0
+        record += char((contentLength >> 8) & 0xff);        // contentLengthB1
+        record += char((contentLength     ) & 0xff);        // contentLengthB0
+        record += char(0);                                  // paddingLength
+        record += char(0);                                  // reserved
+        record.append(content->data(), content->size());    // content
     }
 
     /**
-     * Build an FastCGI Name value pair
+     * FastCGIヘッダー部分の作製
      *
      * @access private
      * @param string name Name
@@ -187,22 +215,22 @@ namespace fcgi {
         
         int nlen = name.size();
         if (nlen < 128) {
-            nvpair  = (unsigned char) nlen;                     // valueLengthB0
+            nvpair  = (unsigned char) nlen;                     // name LengthB0
         } else {
-            nvpair  = (unsigned char) ((nlen >> 24) | 0x80);    // valueLengthB3
-            nvpair += (unsigned char) ((nlen >> 16) & 0xff);    // valueLengthB2
-            nvpair += (unsigned char) ((nlen >>  8) & 0xff);    // valueLengthB1
-            nvpair += (unsigned char) (nlen & 0xff);            // valueLengthB0
+            nvpair  = (unsigned char) ((nlen >> 24) | 0x80);    // name LengthB3
+            nvpair += (unsigned char) ((nlen >> 16) & 0xff);    // name LengthB2
+            nvpair += (unsigned char) ((nlen >>  8) & 0xff);    // name LengthB1
+            nvpair += (unsigned char) (nlen & 0xff);            // name LengthB0
         }
     
         int vlen = value.size();
         if (vlen < 128) {
-            nvpair += (unsigned char) vlen;                     // valueLengthB0
+            nvpair += (unsigned char) vlen;                     // value LengthB0
         } else {
-            nvpair += (unsigned char) ((vlen >> 24) | 0x80);    // valueLengthB3
-            nvpair += (unsigned char) ((vlen >> 16) & 0xff);    // valueLengthB2
-            nvpair += (unsigned char) ((vlen >>  8) & 0xff);    // valueLengthB1
-            nvpair += (unsigned char) (vlen & 0xff);            // valueLengthB0
+            nvpair += (unsigned char) ((vlen >> 24) | 0x80);    // value LengthB3
+            nvpair += (unsigned char) ((vlen >> 16) & 0xff);    // value LengthB2
+            nvpair += (unsigned char) ((vlen >>  8) & 0xff);    // value LengthB1
+            nvpair += (unsigned char) (vlen & 0xff);            // value LengthB0
         }
         nvpair += name + value;
     
@@ -216,13 +244,12 @@ namespace fcgi {
      * @access private
      * @return void
      */
-    bool client::_readPacketHeader() {
+    void client::_readPacketHeader() {
         char pack[HEADER_LEN];
 
         int len = read(sock, pack, sizeof(pack));
         if (len < 0) {
-            log::debug("Unable to read response header.");
-            return false;
+            throw "Unable to read response header.";
         }
         header.version       = ord(pack[0]);
         header.type          = ord(pack[1]);
@@ -230,30 +257,23 @@ namespace fcgi {
         header.contentLength = (ord(pack[4]) << 8) + ord(pack[5]);
         header.paddingLength = ord(pack[6]);
         header.reserved      = ord(pack[7]);
-
-        return true;
     }
 
     /**
-     * Read a FastCGI Packet
+     * パケットの読み込み
      *
      * @access private
-     * @return bool
+     * @return void
      */
-    bool client::_readPacket() {
+    void client::_readPacket() {
         /* ヘッダーデータの読込 */
-        if (!_readPacketHeader()) {
-            return false;
-        }
+        _readPacketHeader();
 
         if (header.contentLength > 0) {
             char* buff = new char[header.contentLength];
-            bzero(buff, header.contentLength);
-
             int length = read(sock, buff, header.contentLength);
             if (length < 0) {
-                log::debug("Unable to read content buffer.");
-                return false;
+                throw "Unable to read content buffer.";
             }
 
             if (header.type == STDOUT || header.type == STDERR) {
@@ -270,23 +290,19 @@ namespace fcgi {
             int len = read(sock, padding, header.paddingLength);
             delete [] padding;
             if (len < 0) {
-                log::debug("Unable to read padding buffer.");
-                return false;
+                throw "Unable to read padding buffer.";
             }
         } // if (header.paddingLength > 0)
-        return true;
     }
 
     /**
-     * Create a connection to the FastCGI application
+     * FastCGIサーバへ接続
      *
      * @access private
      * @return void
      */
     bool client::_connect() {
-        sock = socket(sock_family, SOCK_STREAM, 0);
         if (connect(sock, address, addrlen)) {
-            log::error("Unable to connect to FastCGI application.");
             return false;
         }
         return true;

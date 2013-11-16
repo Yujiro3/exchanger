@@ -60,8 +60,8 @@ namespace exch {
             numtostr.str("");
             numtostr << ((*row).second)->sid;
             fcgicli->params["Exchanger-SID"] = numtostr.str();
-            fcgicli->request(numtostr.str());
 
+            fcgicli->send(numtostr.str());
             ((*row).second)->free();
             ++row;
         }
@@ -115,6 +115,15 @@ namespace exch {
             argv
         );
         bufferevent_enable(self->clients[fd]->bev, EV_READ | EV_WRITE);
+
+        std::stringstream numtostr;
+        numtostr << exch::CMD_CONNECT;
+        self->fcgicli->params["Exchanger-Command"] = numtostr.str();
+        numtostr.str("");
+        numtostr << fd;
+        self->fcgicli->params["Exchanger-SID"] = numtostr.str();
+
+        self->fcgicli->send(numtostr.str());
     }
     
     /**
@@ -131,6 +140,7 @@ namespace exch {
         struct timeval delay = { 2, 0 };
 
         log::log("Caught an interrupt signal; stop the server.");
+        unlink(ini::get("pid"));
     
         event_base_loopexit(self->base, &delay);
     }
@@ -174,9 +184,9 @@ namespace exch {
     bool server::_setFCGIcli() {
         int port = ini::value("fcgi.port");
         if (port >= 1 && port <= 65535) {
-            fcgicli = new fcgi::client(ini::get("fcgi.listen"), port);
+            fcgicli = new fcgi::client(ini::get("fcgi.addr"), port);
         } else {
-            fcgicli = new fcgi::client(ini::get("fcgi.listen"));
+            fcgicli = new fcgi::client(ini::get("fcgi.addr"));
         }
 
         char dir[255];
@@ -213,7 +223,7 @@ namespace exch {
      * @return bool
      */
     bool server::_setRedis() {
-        rcli = new mem::rediscli(base, "127.0.0.1", 6379);
+        rcli = new mem::rediscli(base, ini::get("redis.addr"), ini::value("redis.port"));
 
         if (!rcli->connection()) {
             throw "Could not connect a redis server!";
@@ -230,6 +240,9 @@ namespace exch {
      * @return bool
      */
     bool server::_setSSL() {
+        if (!ini::value("ssl.support")) {
+            return false;
+        }
         SSL_library_init();
         ERR_load_crypto_strings();
         SSL_load_error_strings();

@@ -17,7 +17,7 @@ start()
     fi
 
     echo -n "Starting exchanger.pid: "
-    exchanger --daemon $PIDFILE --config $CONFFILE
+    exchanger --daemon --config $CONFFILE
     echo "done."
 }
 
@@ -25,7 +25,7 @@ start-stop-daemon()
 {
     echo -n "Starting exchanger: "
     start-stop-daemon --start --quiet --pidfile $PIDFILE \
-        --exec exchanger -- "--daemon $PIDFILE --config $CONFFILE" || true
+        --exec exchanger -- "--daemon --config $CONFFILE" || true
     echo "done."
 }
 

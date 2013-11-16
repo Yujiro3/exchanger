@@ -32,6 +32,7 @@
 #include <openssl/err.h>
 #include <openssl/rand.h>
 
+#include "ini_parse.h"
 #include "log_logger.h"
 #include "exch_client.h"
 
@@ -107,6 +108,10 @@ namespace exch {
      * @return void
      */
     void client::sslFilter(SSL_CTX *ssl_ctx) {
+        if (!ini::value("ssl.support")) {
+            return ;
+        }
+
         struct event_base *base = bufferevent_get_base(bev);
 
         //SSL *ssl = SSL_new(ssl_ctx);
