@@ -86,6 +86,7 @@ namespace exch {
             header.to = (header.to) ? header.to : current;
             currentsid << "  -->  " << header.to;
             log::info(currentsid.str());
+
             serv->clients[header.to]->send(content);
         }
     }
@@ -137,7 +138,7 @@ namespace exch {
             numtostr << current;
             serv->fcgicli->params["Exchanger-SID"] = numtostr.str();
 
-            serv->fcgicli->send(numtostr.str());
+            serv->fcgicli->request(numtostr.str());
             serv->clients[current]->free();
             serv->clients.erase(current);
         }

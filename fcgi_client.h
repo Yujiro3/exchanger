@@ -188,6 +188,12 @@ namespace fcgi {
         struct sockaddr *address;
 
         /**
+         * 接続タイプ
+         * @var short
+         */
+        short sock_family;
+
+        /**
          * 接続先アドレスサイズ
          * @var integer
          */
@@ -219,15 +225,6 @@ namespace fcgi {
         ~client();
 
         /**
-         * Execute a send to the FastCGI application
-         *
-         * @access public
-         * @param String stdin Content
-         * @return boolean
-         */
-        bool send(std::string stdin);
-
-        /**
          * Execute a request to the FastCGI application
          *
          * @access public
@@ -238,15 +235,6 @@ namespace fcgi {
     
     private:
         /**
-         * レコードの作成
-         *
-         * @access public
-         * @param String stdin Content
-         * @return void
-         */
-        void _buildRecord(std::string *stdin);
-
-        /**
          * 送信パケット作成
          *
          * @access private
@@ -254,10 +242,10 @@ namespace fcgi {
          * @param  string content
          * @param  int requestId
          */
-        void _buildPacket(int type, std::string *content, int requestId);
+        void _buildPacket(int type, std::string content, int requestId);
 
         /**
-         * FastCGIヘッダー部分の作製
+         * Build an FastCGI Name value pair
          *
          * @access private
          * @param string name Name
@@ -270,20 +258,20 @@ namespace fcgi {
          * ヘッダーパケットの読込
          *
          * @access private
-         * @return void
+         * @return bool
          */
-        void _readPacketHeader();
+        bool _readPacketHeader();
 
         /**
-         * パケットの読込
+         * Responseの受取
          *
          * @access private
-         * @return void
+         * @return bool
          */
-        void _readPacket();
+        bool _readPacket();
     
         /**
-         * FastCGIサーバへ接続
+         * Create a connection to the FastCGI application
          *
          * @access private
          * @return boolean

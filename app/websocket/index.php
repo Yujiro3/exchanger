@@ -17,6 +17,7 @@ include dirname(__FILE__).'/../Exchanger.php';
 
 $exch = new Exchanger('localhost', 6379);
 
+$exch->redis->set('debug', $exch->cmd);
 if ($exch->cmd == Exchanger::CMD_CONNECT) {
     /**
      * Ú‘±ˆ—
