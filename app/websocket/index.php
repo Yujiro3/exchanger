@@ -17,15 +17,9 @@ include dirname(__FILE__).'/../Exchanger.php';
 
 $exch = new Exchanger('localhost', 6379);
 
-$exch->redis->set('debug', $exch->cmd);
-if ($exch->cmd == Exchanger::CMD_CONNECT) {
+if ($exch->cmd == Exchanger::CMD_DISCONNECT) {
     /**
-     * Ú‘±ˆ—
-     */
-    exit();
-} else if ($exch->cmd == Exchanger::CMD_DISCONNECT) {
-    /**
-     * Ø’fˆ—
+     * åˆ‡æ–­å‡¦ç†
      */
     exit();
 }
@@ -33,7 +27,7 @@ if ($exch->cmd == Exchanger::CMD_CONNECT) {
 $handshake = $exch->getSession('handshake');
 if (empty($handshake)) {
     /**
-     * ƒnƒ“ƒhƒVƒFƒCƒN‚ÌŠm—§
+     * ãƒãƒ³ãƒ‰ã‚·ã‚§ã‚¤ã‚¯ã®ç¢ºç«‹
      */
     if (preg_match('/Sec-WebSocket-Key: ([^\s]+)\r\n/', $exch->buff, $matches)) {
         $key = $matches[1];
@@ -41,7 +35,7 @@ if (empty($handshake)) {
         $key = '';
     }
 
-    /* ”FØƒL[¶¬ */
+    /* èªè¨¼ã‚­ãƒ¼ç”Ÿæˆ */
     $accept = $key.'258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
     $accept = base64_encode(sha1($accept, true));
 
@@ -55,7 +49,7 @@ if (empty($handshake)) {
     $exch->setSession('handshake', true);
 } else {
     $msg  = json_decode(decode($exch->buff), true);
-    $user = $msg['user'];
+    $msg['user'] = 'ã‚¨ã‚³ãƒ¼ã•ã‚“';
 
     $output = encode(json_encode($msg));
     $exch->send($output);
@@ -63,17 +57,17 @@ if (empty($handshake)) {
 
 
 /**
- * ƒƒbƒZ[ƒW‚ÌƒfƒR[ƒh
+ * ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã®ãƒ‡ã‚³ãƒ¼ãƒ‰
  *
  * @link http://d.hatena.ne.jp/uuwan/20130121/p1
  * @param string $frame
  * @return string
  */
 function decode($frame) {
-    /* ƒf[ƒ^–{‘Ì‚ÌƒTƒCƒY•ª—Ş‚ğæ“¾ */
+    /* ãƒ‡ãƒ¼ã‚¿æœ¬ä½“ã®ã‚µã‚¤ã‚ºåˆ†é¡ã‚’å–å¾— */
     $length = ord($frame[1]) & 127;
 
-    /* ƒf[ƒ^–{‘Ì‚Æƒ}ƒXƒN‚Ìæ“¾ */        
+    /* ãƒ‡ãƒ¼ã‚¿æœ¬ä½“ã¨ãƒã‚¹ã‚¯ã®å–å¾— */        
     if ($length == 126) {               // medium message
         $masks   = substr($frame, 4, 4);
         $payload = substr($frame, 8);
@@ -85,7 +79,7 @@ function decode($frame) {
         $payload = substr($frame, 6);
     }
     
-    /* ƒ}ƒXƒN‚Ì‰ğœ */
+    /* ãƒã‚¹ã‚¯ã®è§£é™¤ */
     $length = strlen($payload);
     $string   = '';
     for ($pos=0; $pos<$length; $pos++) {
@@ -96,15 +90,15 @@ function decode($frame) {
 }
 
 /**
- * ƒƒbƒZ[ƒW‚ÌƒGƒ“ƒR[ƒh
+ * ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã®ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‰
  *
  * @link http://d.hatena.ne.jp/uuwan/20130201/p1
  * @param string $string
  * @return string
  */
 function encode($message) {
-    $ftoo    = 0x81; // 1000 0001 æ“ª8bit
-    $mask    = 0x00; // *000 0000 ƒ}ƒXƒNƒtƒ‰ƒO
+    $ftoo    = 0x81; // 1000 0001 å…ˆé ­8bit
+    $mask    = 0x00; // *000 0000 ãƒã‚¹ã‚¯ãƒ•ãƒ©ã‚°
     $length  = strlen($message);
     $payload = '';
 

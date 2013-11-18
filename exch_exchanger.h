@@ -47,16 +47,10 @@ namespace exch {
     const int CMD_TLS = 4;
 
     /**
-     * コマンド：接続
-     * @const integer
-     */
-    const int CMD_CONNECT = 8;
-
-    /**
      * コマンド：切断
      * @const integer
      */
-    const int CMD_DISCONNECT = 16;
+    const int CMD_DISCONNECT = 8;
 
     /**
      * セパレーター

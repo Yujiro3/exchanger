@@ -123,7 +123,7 @@ namespace fcgi {
         if (!_connect()) {
             return std::string("");
         }
-        write(sock, record.c_str(), record.size());
+        write(sock, record.data(), record.size());
 
         response.erase();
         do {
@@ -171,7 +171,7 @@ namespace fcgi {
         record += char((contentLength     ) & 0xff);    // contentLengthB0
         record += char(0);                              // paddingLength
         record += char(0);                              // reserved
-        record += content;                              // content
+        record.append(content.data(), content.size());  // content
     }
 
     /**

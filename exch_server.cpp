@@ -186,7 +186,6 @@ namespace exch {
         fcgicli->params["GATEWAY_INTERFACE"] = "FastCGI/1.0";
         fcgicli->params["REQUEST_METHOD"]    = "PUT";
         fcgicli->params["SCRIPT_FILENAME"]   = ini::get("fcgi.app");
-std::cout << ini::get("fcgi.app") << std::endl;
         fcgicli->params["SERVER_SOFTWARE"]   = "cpp/fcgi_client";
         fcgicli->params["SERVER_PROTOCOL"]   = "HTTP/1.1";
         fcgicli->params["CONTENT_TYPE"]      = "application/x-www-form-urlencoded";

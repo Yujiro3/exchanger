@@ -42,7 +42,7 @@ namespace exch {
     void exchanger::readcb(struct bufferevent *bev, void *argv) {
         int current = (int) bufferevent_getfd(bev);
         exch::server *serv = (exch::server *)argv;
-        std::stringstream currentsid;
+        std::stringstream numtostr;
         std::string content;
 
         char buf[4096];
@@ -53,8 +53,11 @@ namespace exch {
         }
 
         /* FastCGIへ送信 */
-        currentsid << current;
-        serv->fcgicli->params["Exchanger-SID"] = currentsid.str();
+        numtostr << CMD_SEND;
+        serv->fcgicli->params["Exchanger-Command"] = numtostr.str();
+        numtostr.str("");
+        numtostr << current;
+        serv->fcgicli->params["Exchanger-SID"] = numtostr.str();
         std::string response = serv->fcgicli->request(content);
         if (response.length() == 0) {
             log::debug("No response.");
@@ -63,6 +66,7 @@ namespace exch {
         
         /* FastCGIからの内容をクライアントへ送信 */
         header_t header;
+        content.erase();
         content = parse(&header, &response);
         if (header.cmd == CMD_TLS) {
             log::info("CMD_TLS");
@@ -83,14 +87,14 @@ namespace exch {
                 ++cursor;
             }
         } else {
-            header.to = (header.to) ? header.to : current;
-            currentsid << "  -->  " << header.to;
-            log::info(currentsid.str());
+            header.to = (header.to > 0) ? header.to : current;
+            numtostr << "  -->  " << header.to;
+            log::info(numtostr.str());
 
             serv->clients[header.to]->send(content);
         }
     }
-    
+
     /**
      * 書き込みコールバック
      *
@@ -181,9 +185,9 @@ namespace exch {
             parsed->sid = atoi(response->substr(pos, length).c_str());
         }
 
-        pos = header.find("Content-length:");
+        pos = header.find("Content-Length:");
         if (pos != std::string::npos) {
-            pos += sizeof("Content-length:");
+            pos += sizeof("Content-Length:");
             exend = header.find(ENDLINE, pos);
             length = (exend != std::string::npos) ? (exend - pos) : std::string::npos;
             conlen = atoi(response->substr(pos, length).c_str());

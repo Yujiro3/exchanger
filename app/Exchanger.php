@@ -51,16 +51,10 @@ class Exchanger {
     const CMD_TLS = 4;
 
     /**
-     * コマンド：接続
-     * @const integer
-     */
-    const CMD_CONNECT = 8;
-
-    /**
      * コマンド：切断
      * @const integer
      */
-    const CMD_DISCONNECT = 16;
+    const CMD_DISCONNECT = 8;
 
     /**
      * Redisサーバ
@@ -154,8 +148,8 @@ class Exchanger {
      */
     public function send($buf) {
         header("Exchanger-Command: {$this->cmd}");
-        header("Exchanger-to: {$this->to}");
-        header("Content-length: ".strlen($buf));
+        header("Exchanger-To: {$this->to}");
+        header("Content-Length: ".strlen($buf));
         echo $buf;
     }
 
