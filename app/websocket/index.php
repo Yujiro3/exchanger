@@ -43,13 +43,14 @@ if (empty($handshake)) {
               "Upgrade: WebSocket\r\n".
               "Connection: Upgrade\r\n".
               "Sec-WebSocket-Accept: {$accept}\r\n".
+              "Sec-WebSocket-Protocol: chat\r\n".
               "\r\n";
-
     $exch->send($header);
     $exch->setSession('handshake', true);
 } else {
     $msg  = json_decode(decode($exch->buff), true);
     $msg['user'] = 'エコーさん';
+    $exch->redis->set('debug', decode($exch->buff));
 
     $output = encode(json_encode($msg));
     $exch->send($output);

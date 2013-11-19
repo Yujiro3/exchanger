@@ -2,6 +2,8 @@ Persistent Connections Server.
 ======================
 libevent2を利用した持続接続サーバー。
 
+![alt exchanger](http://blog.sheeps.me/wp-content/uploads/2013/11/exchanger.png)
+
 利用方法
 ------
 
@@ -29,37 +31,18 @@ libevent2を利用した持続接続サーバー。
     
 ### フロー ###
 
-```
-┌────────┐
-│  クライアント  │
-└──┬─────┘
-      ↓    ↑
-┌─────┴──┐
-│exchangerサーバ │
-└──┬─────┘
-      ↓    ↑
-┌─────┴──┐
-│ FastCGIサーバ  │
-└────────┘
+![alt exchanger](http://blog.sheeps.me/wp-content/uploads/2013/11/001.png)
 
-```
 
 ### WebSocketフロー ###
 
-```
-┌────────┐
-│ wsクライアント │    ハンドシェイク要求
-└──┬─────┘
-      ↓    ↑
-┌─────┴──┐
-│exchangerサーバ │    接続を確立維持
-└──┬─────┘
-      ↓    ↑
-┌─────┴──┐
-│ php5-fpm       │    ハンドシェイク処理
-└────────┘
+![alt exchanger](http://blog.sheeps.me/wp-content/uploads/2013/11/002.png)
 
-```
+
+### チャットアプリ ###
+
+[![MONEY](http://chat.sheeps.me/)](http://blog.sheeps.me/wp-content/uploads/2013/08/chat001.png)
+
 
 
 ### exchangerヘッダーコマンド ###
