@@ -31,17 +31,17 @@ libevent2を利用した持続接続サーバー。
     
 ### フロー ###
 
-![alt exchanger](http://blog.sheeps.me/wp-content/uploads/2013/11/001.png)
+![alt flow1](http://blog.sheeps.me/wp-content/uploads/2013/11/001.png)
 
 
 ### WebSocketフロー ###
 
-![alt exchanger](http://blog.sheeps.me/wp-content/uploads/2013/11/002.png)
+![alt flow2](http://blog.sheeps.me/wp-content/uploads/2013/11/002.png)
 
 
 ### チャットアプリ ###
 
-[![MONEY](http://chat.sheeps.me/)](http://blog.sheeps.me/wp-content/uploads/2013/08/chat001.png)
+![alt chat](http://blog.sheeps.me/wp-content/uploads/2013/08/chat001.png)
 
 
 
