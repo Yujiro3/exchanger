@@ -1,14 +1,30 @@
-PROGRAM = exchanger
-CC = g++
-CFLAGS = -L/usr/local/lib -I/usr/local/include -Wall
-LINKS = -lcrypto -lssl -levent -levent_openssl
-SRCS = main.cpp ini_parse.cpp log_logger.cpp fcgi_client.cpp mem_rediscli.cpp exch_server.cpp exch_client.cpp exch_exchanger.cpp
+PROGRAM  = exchanger
+TARGETS  = main ini_parse log_logger fcgi_client mem_rediscli exch_server exch_client exch_exchanger
+DEP      = .depend
+SRCS     = $(TARGETS:%=%.cpp)
+OBJS     = $(addsuffix .o, $(basename $(SRCS)))
 
-all:
-	$(CC) $(CFLAGS) $(LINKS) -o $(PROGRAM) $(SRCS)
+CXXFLAGS = -L/usr/local/lib -I/usr/local/include -Wall -g
+CXXLIBS  = -lcrypto -lssl -levent -levent_openssl
+CXX      = g++
+
+all: dep $(PROGRAM)
+
+$(PROGRAM): $(OBJS)
+	$(CXX) $(CXXFLAGS) $(CXXLIBS) $(OBJS) -o $@
+
+.cpp.o:
+	$(CXX) $(CXXLIBS) -c $<
+
+dep:
+ifeq ($(DEP),$(wildcard $(DEP)))
+-include $(DEP)
+else
+	$(CXX) -MM $(CXXFLAGS) $(SRCS) > $(DEP)
+endif
 
 clean:
-	rm $(PROGRAM)
+	rm -f $(PROGRAM) $(OBJS) $(DEP)
 
 install: 
 	cp ./$(PROGRAM) /usr/local/bin/

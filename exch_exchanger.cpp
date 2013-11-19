@@ -91,7 +91,9 @@ namespace exch {
             numtostr << "  -->  " << header.to;
             log::info(numtostr.str());
 
-            serv->clients[header.to]->send(content);
+            if (serv->clients.count(header.to) != 0) {
+                serv->clients[header.to]->send(content);
+            }
         }
     }
 
