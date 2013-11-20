@@ -6,15 +6,15 @@ OBJS     = $(addsuffix .o, $(basename $(SRCS)))
 
 CXXFLAGS = -L/usr/local/lib -I/usr/local/include -Wall -g
 CXXLIBS  = -lcrypto -lssl -levent -levent_openssl
-CXX      = g++
+CXX      = g++ -O2
 
 all: dep $(PROGRAM)
 
 $(PROGRAM): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(CXXLIBS) $(OBJS) -o $@
+	$(CXX) $(CXXFLAGS) $(OBJS) -o $@ $(CXXLIBS)
 
 .cpp.o:
-	$(CXX) $(CXXLIBS) -c $<
+	$(CXX) $(CXXFLAGS) -c $<
 
 dep:
 ifeq ($(DEP),$(wildcard $(DEP)))
