@@ -105,28 +105,29 @@ namespace exch {
      * SSL通信設定
      *
      * @access public
-     * @return void
+     * @return bool
      */
-    void client::sslFilter(SSL_CTX *ssl_ctx) {
-        if (!ini::value("ssl.support")) {
-            return ;
+    bool client::sslFilter(SSL_CTX *ssl_ctx) {
+        if (!ssl_ctx) {
+            return false;
         }
-
+        SSL *ssl = SSL_new(ssl_ctx);
         struct event_base *base = bufferevent_get_base(bev);
-
-        //SSL *ssl = SSL_new(ssl_ctx);
-        struct ssl_st *ssl = SSL_new(ssl_ctx);
 
         struct bufferevent *b_ssl = bufferevent_openssl_filter_new(
             base,
-            bev,
-            ssl,
-            BUFFEREVENT_SSL_CONNECTING,
+            bev, 
+            ssl, 
+            BUFFEREVENT_SSL_ACCEPTING,
             BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS
         );
-
-
+        if (!b_ssl) {
+            log::error("Error Bufferevent_openssl_new!");
+            return false;
+        }
         bev = b_ssl;
+
+        return true;
     }
 
     /**

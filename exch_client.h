@@ -26,6 +26,15 @@
 #include <openssl/err.h>
 #include <openssl/rand.h>
 
+extern "C" {
+struct bufferevent *
+bufferevent_openssl_filter_new(struct event_base *base,
+    struct bufferevent *underlying,
+    struct ssl_st *ssl,
+    enum bufferevent_ssl_state state,
+    int options);
+}
+
 namespace exch {
     /**
      * FCGIプロトコル開始リクエスト本文クラス
@@ -93,9 +102,9 @@ namespace exch {
          * SSL通信設定
          *
          * @access public
-         * @return void
+         * @return boolean
          */
-        void sslFilter(SSL_CTX *ssl_ctx);
+        bool sslFilter(SSL_CTX *ssl_ctx);
 
         /**
          * アクセスユーザーログ保存

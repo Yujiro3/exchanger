@@ -238,23 +238,24 @@ namespace exch {
         ERR_load_crypto_strings();
         SSL_load_error_strings();
         OpenSSL_add_all_algorithms();
-
+    
         int random = RAND_poll();
         if (random == 0) {
-            throw "RAND_poll() failed.\n";
+            throw "Can’t RAND_poll() failed.";
         }
         ssl_ctx = SSL_CTX_new(SSLv3_server_method());
-        SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_NONE, NULL);
-        if (!SSL_CTX_use_certificate_chain_file(ssl_ctx, ini::get("ssl.local_cert"))) {
+    
+        if (SSL_CTX_use_certificate_chain_file(ssl_ctx, ini::get("ssl.local_cert"))  != 1) {
             throw "Can’t read certificate file";
         }
-
-        if (!SSL_CTX_use_PrivateKey_file(ssl_ctx, ini::get("ssl.local_pk"), SSL_FILETYPE_PEM)) {
+    
+        if (SSL_CTX_use_PrivateKey_file(ssl_ctx, ini::get("ssl.local_pk"), SSL_FILETYPE_PEM) != 1) {
             throw "Can’t read key file";
         }
         
         SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_NONE, NULL);
-
+        SSL_CTX_set_options(ssl_ctx, SSL_OP_SINGLE_DH_USE);
+    
         return true;
     }
 } // namespace exch
