@@ -104,8 +104,7 @@ namespace exch {
         void *argv
     ) {
         server *self = (server *)argv;
-
-        self->clients[fd] = new client(self->base, fd, sa);
+        self->clients[fd] = new client(self->base, fd, self->ssl_ctx, self->socktype, sa);
 
         bufferevent_setcb(
             self->clients[fd]->bev, 
@@ -232,13 +231,18 @@ namespace exch {
      */
     bool server::_setSSL() {
         if (!ini::value("ssl.support")) {
+            socktype = TYPE_PLAIN_SOCKET;
             return false;
         }
         SSL_library_init();
         ERR_load_crypto_strings();
         SSL_load_error_strings();
         OpenSSL_add_all_algorithms();
-    
+        
+        if (ini::value("ssl.ssl_socket")) {
+            socktype = TYPE_SSL_SOCKET;
+        }
+
         int random = RAND_poll();
         if (random == 0) {
             throw "Can’t RAND_poll() failed.";

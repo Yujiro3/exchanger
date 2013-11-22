@@ -121,18 +121,16 @@ int main(int argc, char **argv) {
     /* ログの設定 */
     log::init(ini::get("log"), ini::get("error.log"), ini::value("log.type"));
 
-    /* サーバ */
-    exch::server *eserver;
-    
-    eserver = new exch::server();
-
     try {
+        /* サーバ */
+        exch::server *eserver;
+        eserver = new exch::server();
         eserver->roop();
+        delete eserver;
     } catch (const char* errmsg) {
         log::error(errmsg);
     }
     
-    delete eserver;
     unlink(ini::get("pid"));
 
     return 0;

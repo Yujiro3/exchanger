@@ -26,20 +26,35 @@
 #include <openssl/err.h>
 #include <openssl/rand.h>
 
+#ifdef  __cplusplus
 extern "C" {
-struct bufferevent *
-bufferevent_openssl_filter_new(struct event_base *base,
-    struct bufferevent *underlying,
-    struct ssl_st *ssl,
-    enum bufferevent_ssl_state state,
-    int options);
+#endif
+
+    struct bufferevent *bufferevent_openssl_filter_new(
+        struct event_base *base,
+        struct bufferevent *underlying,
+        struct ssl_st *ssl,
+        enum bufferevent_ssl_state state,
+        int options
+    );
+
+    struct bufferevent *bufferevent_openssl_socket_new(
+        struct event_base *base,
+        evutil_socket_t fd,
+        struct ssl_st *ssl,
+        enum bufferevent_ssl_state state,
+        int options
+    );
+
+#ifdef  __cplusplus
 }
+#endif
 
 namespace exch {
     /**
-     * FCGIプロトコル開始リクエスト本文クラス
+     * Exchangerクライアントクラス
      *
-     * @package     FCGIClient
+     * @package     Exchanger
      * @author      Yujiro Takahashi <yujiro3@gmail.com>
      */
     class client {
@@ -67,13 +82,14 @@ namespace exch {
          * コンストラクタ
          *
          * @access public
-         * @param struct bufferevent *inpbev イベントバッファー
+         * @param struct event_base *base    イベントベース
          * @param struct vutil_socket_t fd   ソケット
+         * @param SSL_CTX *ssl_ctx           SSLコンテキスト
          * @param struct sockaddr *sa        ソケットアドレス
          * @return void
          */
-        client(struct event_base *base, evutil_socket_t fd, struct sockaddr *sa);
-    
+        client(struct event_base *base, evutil_socket_t fd, SSL_CTX *ssl_ctx, int socktype, struct sockaddr *sa);
+
         /**
          * デストラクタ
          *
@@ -97,6 +113,30 @@ namespace exch {
          * @return void
          */
         void free();
+
+        /**
+         * プレーンソケットの作成
+         *
+         * @access public
+         * @param struct event_base *base    イベントベース
+         * @param struct evutil_socket_t fd  ソケット
+         * @param struct struct ssl_st *ssl  ssl
+         * @param struct int options         オプション
+         * @return void
+         */
+        static struct bufferevent *exch_socket_new(struct event_base *base, evutil_socket_t fd, SSL_CTX *ssl_ctx, int options);
+
+        /**
+         * SSLソケットの作成
+         *
+         * @access public
+         * @param struct event_base *base    イベントベース
+         * @param struct evutil_socket_t fd  ソケット
+         * @param struct struct ssl_st *ssl  ssl
+         * @param struct int options         オプション
+         * @return void
+         */
+        static struct bufferevent *exch_openssl_socket_new(struct event_base *base, evutil_socket_t fd, SSL_CTX *ssl_ctx, int options);
 
         /**
          * SSL通信設定

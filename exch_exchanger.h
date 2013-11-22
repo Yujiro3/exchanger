@@ -65,9 +65,9 @@ namespace exch {
     const char ENDLINE[] = "\r\n";
 
     /**
-     * FCGIプロトコル開始リクエスト本文クラス
+     * Exchanger交換器クラス
      *
-     * @package     FCGIClient
+     * @package     Exchanger
      * @author      Yujiro Takahashi <yujiro3@gmail.com>
      */
     class exchanger {

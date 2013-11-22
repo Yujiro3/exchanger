@@ -45,9 +45,21 @@ namespace exch {
     typedef std::map<unsigned long int, exch::client*> clients_t;
 
     /**
-     * FCGIプロトコル開始リクエスト本文クラス
+     * プレーンソケット
+     * @const unsigned int
+     */
+    const unsigned int TYPE_PLAIN_SOCKET = 0;
+
+    /**
+     * SSLソケット
+     * @const unsigned int
+     */
+    const unsigned int TYPE_SSL_SOCKET = 1;
+
+    /**
+     * Exchangerサーバクラス
      *
-     * @package     FCGIClient
+     * @package     Exchanger
      * @author      Yujiro Takahashi <yujiro3@gmail.com>
      */
     class server {
@@ -81,6 +93,12 @@ namespace exch {
          * @var struct
          */
         struct event *signal_event;
+
+        /**
+         * ソケットタイプ
+         * @var int
+         */
+        int socktype;
 
         /**
          * FCGIクライアント

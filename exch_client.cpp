@@ -41,14 +41,22 @@ namespace exch {
      * コンストラクタ
      *
      * @access public
-     * @param struct bufferevent *inpbev イベントバッファー
+     * @param struct event_base *base    イベントベース
      * @param struct vutil_socket_t fd   ソケット
+     * @param SSL_CTX *ssl_ctx           SSLコンテキスト
+     * @param int socktype               SSLコンテキスト
      * @param struct sockaddr *sa        ソケットアドレス
      * @return void
      */
-    client::client(struct event_base *base, evutil_socket_t fd, struct sockaddr *sa) {
+    client::client(struct event_base *base, evutil_socket_t fd, SSL_CTX *ssl_ctx, int socktype, struct sockaddr *sa) {
+        struct bufferevent *(*socket_new[])(struct event_base *base, evutil_socket_t fd, SSL_CTX *ssl_ctx, int options) = {
+            exch_socket_new,
+            exch_openssl_socket_new
+        };
+
         sid = (int)fd;
-        bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS);
+        // bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS);
+        bev = (*socket_new[socktype])(base, fd, ssl_ctx, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS);
         if (!bev) {
             log::error("Error constructing bufferevent!");
             event_base_loopbreak(base);
@@ -99,6 +107,35 @@ namespace exch {
         }
 
         bufferevent_free(bev);
+    }
+
+    /**
+     * プレーンソケットの作成
+     *
+     * @access public
+     * @param struct event_base *base    イベントベース
+     * @param struct evutil_socket_t fd  ソケット
+     * @param struct SSL_CTX *ssl_ctx    SSLコンテキスト
+     * @param struct int options         オプション
+     * @return void
+     */
+    struct bufferevent *client::exch_socket_new(struct event_base *base, evutil_socket_t fd, SSL_CTX *ssl_ctx, int options) {
+        return bufferevent_socket_new(base, fd, options);
+    }
+
+    /**
+     * SSLソケットの作成
+     *
+     * @access public
+     * @param struct event_base *base    イベントベース
+     * @param struct evutil_socket_t fd  ソケット
+     * @param struct SSL_CTX *ssl_ctx    SSLコンテキスト
+     * @param struct int options         オプション
+     * @return void
+     */
+    struct bufferevent *client::exch_openssl_socket_new(struct event_base *base, evutil_socket_t fd, SSL_CTX *ssl_ctx, int options) {
+        SSL *ssl = SSL_new(ssl_ctx);
+        return bufferevent_openssl_socket_new(base, fd, ssl, BUFFEREVENT_SSL_ACCEPTING, options);
     }
 
     /**

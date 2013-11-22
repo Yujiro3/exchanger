@@ -40,7 +40,7 @@ namespace mem {
     const char BULK_SEPARATOR[] = "\r\n";
 
     /**
-     * redisクライアント
+     * redisクライアントクラス
      *
      * @package     redis
      * @author      Yujiro Takahashi <yujiro3@gmail.com>
