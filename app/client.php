@@ -36,6 +36,16 @@ if($socket) {
         "\r\n"
     );
     echo fread($socket, 8192);
+    echo "--------------------------------\n";
+
+    fwrite(
+        $socket, 
+        '{}'."\n"
+    );
+
+    echo fread($socket, 8192)."\n";
+    echo "\n";
+
 /*
     // TLS開始通知
     fwrite(

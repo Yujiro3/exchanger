@@ -34,7 +34,7 @@
 #include <openssl/rand.h>
 
 #include "mem_rediscli.h"
-#include "fcgi_client.h"
+#include "fcgipp.h"
 #include "exch_client.h"
 
 namespace exch {
@@ -104,7 +104,7 @@ namespace exch {
          * FCGIクライアント
          * @var fcgi::client
          */
-        fcgi::client *fcgicli;
+        fcgi::FastCGIClient *fcgicli;
 
         /**
          * Redisクライアント

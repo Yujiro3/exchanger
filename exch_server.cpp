@@ -174,9 +174,9 @@ namespace exch {
     bool server::_setFCGIcli() {
         int port = ini::value("fcgi.port");
         if (port >= 1 && port <= 65535) {
-            fcgicli = new fcgi::client(ini::get("fcgi.addr"), port);
+            fcgicli = new fcgi::FastCGIClient(ini::get("fcgi.addr"), port);
         } else {
-            fcgicli = new fcgi::client(ini::get("fcgi.addr"));
+            fcgicli = new fcgi::FastCGIClient(ini::get("fcgi.addr"));
         }
 
         char dir[255];

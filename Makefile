@@ -1,11 +1,11 @@
 PROGRAM  = exchanger
-TARGETS  = main ini_parse log_logger fcgi_client mem_rediscli exch_server exch_client exch_exchanger
+TARGETS  = main ini_parse log_logger fcgipp mem_rediscli exch_server exch_client exch_exchanger
 DEP      = .depend
 SRCS     = $(TARGETS:%=%.cpp)
 OBJS     = $(addsuffix .o, $(basename $(SRCS)))
 
 CXXFLAGS = -L/usr/local/lib -I/usr/local/include -Wall -g
-CXXLIBS  = -lcrypto -lssl -levent -levent_openssl
+CXXLIBS  = -lcrypto -lssl -levent -levent_openssl -lfcgi
 CXX      = g++ -O2
 
 all: dep $(PROGRAM)

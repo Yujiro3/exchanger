@@ -63,7 +63,7 @@ namespace exch {
             log::debug("No response.");
             return ;
         }
-        
+
         /* FastCGIからの内容をクライアントへ送信 */
         header_t header;
         content.erase();
@@ -88,10 +88,9 @@ namespace exch {
             }
         } else {
             header.to = (header.to > 0) ? header.to : current;
-            numtostr << "  -->  " << header.to;
-            log::info(numtostr.str());
-
             if (serv->clients.count(header.to) != 0) {
+                numtostr << "  -->  " << header.to;
+                log::info(numtostr.str());
                 serv->clients[header.to]->send(content);
             }
         }
