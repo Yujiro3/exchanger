@@ -43,7 +43,7 @@ namespace exch {
         int current = (int) bufferevent_getfd(bev);
         exch::server *serv = (exch::server *)argv;
         std::stringstream numtostr;
-        std::string content;
+        std::string content("");
 
         char buf[4096];
         struct evbuffer *input = bufferevent_get_input(bev);
@@ -59,6 +59,7 @@ namespace exch {
         numtostr << current;
         serv->fcgicli->params["Exchanger-SID"] = numtostr.str();
         std::string response = serv->fcgicli->request(content);
+
         if (response.length() == 0) {
             log::debug("No response.");
             return ;
@@ -66,8 +67,8 @@ namespace exch {
 
         /* FastCGIからの内容をクライアントへ送信 */
         header_t header;
-        content.erase();
         content = parse(&header, &response);
+
         if (header.cmd == CMD_TLS) {
             log::info("CMD_TLS");
             serv->clients[current]->sslFilter(serv->ssl_ctx);
