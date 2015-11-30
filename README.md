@@ -2,7 +2,7 @@ Persistent Connections Server.
 ======================
 libevent2を利用した持続接続サーバー。
 
-![alt exchanger](http://blog.sheeps.me/wp-content/uploads/2013/11/exchanger.png)
+![alt exchanger](http://blog.hit-suji.net/wp-content/uploads/2013/11/exchanger.png)
 
 利用方法
 ------
@@ -31,17 +31,17 @@ libevent2を利用した持続接続サーバー。
     
 ### フロー ###
 
-![alt flow1](http://blog.sheeps.me/wp-content/uploads/2013/11/001.png)
+![alt flow1](http://blog.hit-suji.net/wp-content/uploads/2013/11/001.png)
 
 
 ### WebSocketフロー ###
 
-![alt flow2](http://blog.sheeps.me/wp-content/uploads/2013/11/002.png)
+![alt flow2](http://blog.hit-suji.net/wp-content/uploads/2013/11/002.png)
 
 
 ### チャットアプリ ###
 
-![alt chat](http://blog.sheeps.me/wp-content/uploads/2013/08/chat001.png)
+![alt chat](http://blog.hit-suji.net/wp-content/uploads/2013/08/chat001.png)
 
 
 
